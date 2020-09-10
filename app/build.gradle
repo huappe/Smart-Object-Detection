@@ -3,4 +3,9 @@ apply plugin: 'de.undercouch.download'
 
 android {
     compileSdkVersion 28
-    defaultC
+    defaultConfig {
+        applicationId "com.toure.objectdetection"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionNa
