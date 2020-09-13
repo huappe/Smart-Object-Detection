@@ -22,4 +22,9 @@ android {
     }
     compileOptions {
         sourceCompatibility = '1.8'
-        targetCompatibility = '1
+        targetCompatibility = '1.8'
+    }
+}
+// import DownloadModels task
+project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+project.ext.TMP_DIR   
