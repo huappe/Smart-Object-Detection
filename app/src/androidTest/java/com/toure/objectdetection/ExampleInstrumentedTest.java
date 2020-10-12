@@ -22,4 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.tour
+        assertEquals("com.toure.objectdetection", appContext.getPackageName());
+    }
+}
