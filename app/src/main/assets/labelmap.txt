@@ -29,4 +29,22 @@ backpack
 umbrella
 ???
 ???
-ha
+handbag
+tie
+suitcase
+frisbee
+skis
+snowboard
+sports ball
+kite
+baseball bat
+baseball glove
+skateboard
+surfboard
+tennis racket
+bottle
+???
+wine glass
+cup
+fork
+kni
