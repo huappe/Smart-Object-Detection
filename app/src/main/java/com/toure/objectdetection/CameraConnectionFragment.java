@@ -542,3 +542,45 @@ public class CameraConnectionFragment extends Fragment {
           (long) lhs.getWidth() * lhs.getHeight() - (long) rhs.getWidth() * rhs.getHeight());
     }
   }
+
+  /** Shows an error message dialog. */
+  public static class ErrorDialog extends DialogFragment {
+    private static final String ARG_MESSAGE = "message";
+
+    public static ErrorDialog newInstance(final String message) {
+      final ErrorDialog dialog = new ErrorDialog();
+      final Bundle args = new Bundle();
+      args.putString(ARG_MESSAGE, message);
+      dialog.setArguments(args);
+      return dialog;
+    }
+
+    @Override
+    public Dialog onCreateDialog(final Bundle savedInstanceState) {
+      final Activity activity = getActivity();
+      return new AlertDialog.Builder(activity)
+          .setMessage(getArguments().getString(ARG_MESSAGE))
+          .setPositiveButton(
+              android.R.string.ok,
+              new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialogInterface, final int i) {
+                  activity.finish();
+                }
+              })
+          .create();
+    }
+  }
+
+  /**
+   * Return the camera focal length
+   * @return focal length in centimeters
+   */
+  double getFocalLength(){
+    if (previewRequest != null){
+      return  previewRequest.get(CaptureRequest.LENS_FOCAL_LENGTH)/10.0; // we divided by 10 to get the length in centimeters;
+    }
+    return 0;
+
+  }
+}
