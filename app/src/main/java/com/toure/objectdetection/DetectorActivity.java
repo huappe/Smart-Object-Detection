@@ -229,3 +229,65 @@ public class DetectorActivity extends MainActivity implements OnImageAvailableLi
                   //getDistance(result.getLocation());
                   //speakDetectedObject(result.getTitle());
                   //Thread.sleep(2000);
+
+                }
+              }
+
+              tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
+              trackingOverlay.postInvalidate();
+
+              computingDetection = false;
+
+              runOnUiThread(
+                      () -> {
+                        showFrameInfo(previewWidth + "x" + previewHeight);
+                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
+                        showInference(lastProcessingTimeMs + "ms");
+                      });
+            }catch (Exception ex){
+              ex.printStackTrace();
+            }
+
+          }
+        });
+  }
+
+  @Override
+  protected int getLayoutId() {
+    return R.layout.camera_connection_fragment_tracking;
+  }
+
+  @Override
+  protected Size getDesiredPreviewFrameSize() {
+    return DESIRED_PREVIEW_SIZE;
+  }
+
+  @Override
+  protected void setUseNNAPI(final boolean isChecked) {
+    runInBackground(() -> detector.setUseNNAPI(isChecked));
+  }
+
+  @Override
+  protected void setNumThreads(final int numThreads) {
+    runInBackground(() -> detector.setNumThreads(numThreads));
+  }
+
+  // Which detection model to use: by default uses Tensorflow Object Detection API frozen
+  // checkpoints.
+  private enum DetectorMode {
+    TF_OD_API
+  }
+
+  void getDistance(RectF location){
+    double focalLength;
+    double imageHieght = Math.round((location.top - location.bottom) * 0.0264583333 *10)/10.0; // image height in centimeters
+    if (isUseCamera2API()){
+      focalLength = ((CameraConnectionFragment)getFragmentManager().findFragmentById(R.id.container)).getFocalLength();
+    }
+    else{
+      focalLength = ((LegacyCameraConnectionFragment)getFragmentManager().findFragmentById(R.id.container)).getFocalLength();
+    }Log.d("Dis", "distance: "+ Math.round(focalLength*1500/imageHieght)/10.0);
+    Toast.makeText(this, "distance: "+ Math.round(focalLength*1500/imageHieght)/10.0, Toast.LENGTH_SHORT).show();
+  }
+
+}
