@@ -143,3 +143,158 @@ public abstract class MainActivity extends AppCompatActivity
                 requestPermission();
             }
         }
+        else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private String chooseCamera() {
+        final CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try {
+            for (final String cameraId : manager.getCameraIdList()) {
+                final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+
+                // We don't use a front facing camera in this sample.
+                final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                    continue;
+                }
+
+                final StreamConfigurationMap map =
+                        characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+                if (map == null) {
+                    continue;
+                }
+
+                // Fallback to camera1 API for internal cameras that don't have full support.
+                // This should help with legacy situations where using the camera2 API causes
+                // distorted or otherwise broken previews.
+                useCamera2API =
+                        (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
+                                || isHardwareLevelSupported(
+                                characteristics, CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
+                LOGGER.i("Camera API lv2?: %s", useCamera2API);
+                return cameraId;
+            }
+        } catch (CameraAccessException e) {
+            LOGGER.e(e, "Not allowed to access camera");
+        }
+
+        return null;
+    }
+
+    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes) {
+        // Because of the variable row stride it's not possible to know in
+        // advance the actual necessary dimensions of the yuv planes.
+        for (int i = 0; i < planes.length; ++i) {
+            final ByteBuffer buffer = planes[i].getBuffer();
+            if (yuvBytes[i] == null) {
+                LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
+                yuvBytes[i] = new byte[buffer.capacity()];
+            }
+            buffer.get(yuvBytes[i]);
+        }
+    }
+
+    /** Callback for Camera2 API */
+    @Override
+    public void onImageAvailable(final ImageReader reader) {
+        // We need wait until we have some size from onPreviewSizeChosen
+        if (previewWidth == 0 || previewHeight == 0) {
+            return;
+        }
+        if (rgbBytes == null) {
+            rgbBytes = new int[previewWidth * previewHeight];
+        }
+        try {
+            final Image image = reader.acquireLatestImage();
+
+            if (image == null) {
+                return;
+            }
+
+            if (isProcessingFrame) {
+                image.close();
+                return;
+            }
+            isProcessingFrame = true;
+            Trace.beginSection("imageAvailable");
+            final Image.Plane[] planes = image.getPlanes();
+            fillBytes(planes, yuvBytes);
+            yRowStride = planes[0].getRowStride();
+            final int uvRowStride = planes[1].getRowStride();
+            final int uvPixelStride = planes[1].getPixelStride();
+
+            imageConverter =
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            ImageUtils.convertYUV420ToARGB8888(
+                                    yuvBytes[0],
+                                    yuvBytes[1],
+                                    yuvBytes[2],
+                                    previewWidth,
+                                    previewHeight,
+                                    yRowStride,
+                                    uvRowStride,
+                                    uvPixelStride,
+                                    rgbBytes);
+                        }
+                    };
+
+            postInferenceCallback =
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            image.close();
+                            isProcessingFrame = false;
+                        }
+                    };
+
+            processImage();
+        } catch (final Exception e) {
+            LOGGER.e(e, "Exception!");
+            Trace.endSection();
+            return;
+        }
+        Trace.endSection();
+    }
+
+    @Override
+    public synchronized void onStart() {
+        LOGGER.d("onStart " + this);
+        super.onStart();
+        // Initialise the text to speach synthesizer
+        mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS){
+                    mTTS.setPitch(0.5f);
+                    mTTS.setSpeechRate(0.5f);
+                    int results = mTTS.setLanguage(Locale.ENGLISH);
+                    if (results == TextToSpeech.LANG_MISSING_DATA ||
+                    results == TextToSpeech.LANG_NOT_SUPPORTED){
+                        Log.e("MainActivity", "Language not supported");
+                        isTTSInitialised = false;
+                    }else{
+                        isTTSInitialised = true;
+                    }
+                }
+                else{
+                    Log.e("MainActivity", "Initialisation failed");
+                    isTTSInitialised = false;
+                }
+            }
+        });
+    }
+
+    @Override
+    public synchronized void onResume() {
+        LOGGER.d("onResume " + this);
+        super.onResume();
+
+        handlerThread = new HandlerThread("inference");
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+    }
