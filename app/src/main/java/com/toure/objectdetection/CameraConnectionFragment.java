@@ -249,3 +249,159 @@ public class CameraConnectionFragment extends Fragment {
       return choices[0];
     }
   }
+
+  public static CameraConnectionFragment newInstance(
+      final ConnectionCallback callback,
+      final OnImageAvailableListener imageListener,
+      final int layout,
+      final Size inputSize) {
+    return new CameraConnectionFragment(callback, imageListener, layout, inputSize);
+  }
+
+  /**
+   * Shows a {@link Toast} on the UI thread.
+   *
+   * @param text The message to show
+   */
+  private void showToast(final String text) {
+    final Activity activity = getActivity();
+    if (activity != null) {
+      activity.runOnUiThread(
+          new Runnable() {
+            @Override
+            public void run() {
+              Toast.makeText(activity, text, Toast.LENGTH_SHORT).show();
+            }
+          });
+    }
+  }
+
+  @Override
+  public View onCreateView(
+      final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
+    return inflater.inflate(layout, container, false);
+  }
+
+  @Override
+  public void onViewCreated(final View view, final Bundle savedInstanceState) {
+    textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
+  }
+
+  @Override
+  public void onActivityCreated(final Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    startBackgroundThread();
+
+    // When the screen is turned off and turned back on, the SurfaceTexture is already
+    // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
+    // a camera and start preview from here (otherwise, we wait until the surface is ready in
+    // the SurfaceTextureListener).
+    if (textureView.isAvailable()) {
+      openCamera(textureView.getWidth(), textureView.getHeight());
+    } else {
+      textureView.setSurfaceTextureListener(surfaceTextureListener);
+    }
+  }
+
+  @Override
+  public void onPause() {
+    closeCamera();
+    stopBackgroundThread();
+    super.onPause();
+  }
+
+  public void setCamera(String cameraId) {
+    this.cameraId = cameraId;
+  }
+
+  /** Sets up member variables related to camera. */
+  private void setUpCameraOutputs() {
+    final Activity activity = getActivity();
+    final CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+    try {
+      final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+
+      final StreamConfigurationMap map =
+          characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+      sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+
+      // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
+      // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
+      // garbage capture data.
+      previewSize =
+          chooseOptimalSize(
+              map.getOutputSizes(SurfaceTexture.class),
+              inputSize.getWidth(),
+              inputSize.getHeight());
+
+      // We fit the aspect ratio of TextureView to the size of preview we picked.
+      final int orientation = getResources().getConfiguration().orientation;
+      if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
+      } else {
+        textureView.setAspectRatio(previewSize.getHeight(), previewSize.getWidth());
+      }
+    } catch (final CameraAccessException e) {
+      LOGGER.e(e, "Exception!");
+    } catch (final NullPointerException e) {
+      // Currently an NPE is thrown when the Camera2API is used but not supported on the
+      // device this code runs.
+      // TODO(andrewharp): abstract ErrorDialog/RuntimeException handling out into new method and
+      // reuse throughout app.
+      ErrorDialog.newInstance(getString(R.string.camera_error))
+          .show(getChildFragmentManager(), FRAGMENT_DIALOG);
+      throw new RuntimeException(getString(R.string.camera_error));
+    }
+
+    cameraConnectionCallback.onPreviewSizeChosen(previewSize, sensorOrientation);
+  }
+
+  /** Opens the camera specified by {@link CameraConnectionFragment#cameraId}. */
+  private void openCamera(final int width, final int height) {
+    setUpCameraOutputs();
+    configureTransform(width, height);
+    final Activity activity = getActivity();
+    final CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+    try {
+      if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+        throw new RuntimeException("Time out waiting to lock camera opening.");
+      }
+      manager.openCamera(cameraId, stateCallback, backgroundHandler);
+    } catch (final CameraAccessException e) {
+      LOGGER.e(e, "Exception!");
+    } catch (final InterruptedException e) {
+      throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
+    }
+  }
+
+  /** Closes the current {@link CameraDevice}. */
+  private void closeCamera() {
+    try {
+      cameraOpenCloseLock.acquire();
+      if (null != captureSession) {
+        captureSession.close();
+        captureSession = null;
+      }
+      if (null != cameraDevice) {
+        cameraDevice.close();
+        cameraDevice = null;
+      }
+      if (null != previewReader) {
+        previewReader.close();
+        previewReader = null;
+      }
+    } catch (final InterruptedException e) {
+      throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
+    } finally {
+      cameraOpenCloseLock.release();
+    }
+  }
+
+  /** Starts a background thread and its {@link Handler}. */
+  private void startBackgroundThread() {
