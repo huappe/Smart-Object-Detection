@@ -405,3 +405,140 @@ public class CameraConnectionFragment extends Fragment {
 
   /** Starts a background thread and its {@link Handler}. */
   private void startBackgroundThread() {
+    backgroundThread = new HandlerThread("ImageListener");
+    backgroundThread.start();
+    backgroundHandler = new Handler(backgroundThread.getLooper());
+  }
+
+  /** Stops the background thread and its {@link Handler}. */
+  private void stopBackgroundThread() {
+    backgroundThread.quitSafely();
+    try {
+      backgroundThread.join();
+      backgroundThread = null;
+      backgroundHandler = null;
+    } catch (final InterruptedException e) {
+      LOGGER.e(e, "Exception!");
+    }
+  }
+
+  /** Creates a new {@link CameraCaptureSession} for camera preview. */
+  private void createCameraPreviewSession() {
+    try {
+      final SurfaceTexture texture = textureView.getSurfaceTexture();
+      assert texture != null;
+
+      // We configure the size of default buffer to be the size of camera preview we want.
+      texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+
+      // This is the output Surface we need to start preview.
+      final Surface surface = new Surface(texture);
+
+      // We set up a CaptureRequest.Builder with the output Surface.
+      previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+      previewRequestBuilder.addTarget(surface);
+
+      LOGGER.i("Opening camera preview: " + previewSize.getWidth() + "x" + previewSize.getHeight());
+
+      // Create the reader for the preview frames.
+      previewReader =
+          ImageReader.newInstance(
+              previewSize.getWidth(), previewSize.getHeight(), ImageFormat.YUV_420_888, 2);
+
+      previewReader.setOnImageAvailableListener(imageListener, backgroundHandler);
+      previewRequestBuilder.addTarget(previewReader.getSurface());
+
+      // Here, we create a CameraCaptureSession for camera preview.
+      cameraDevice.createCaptureSession(
+          Arrays.asList(surface, previewReader.getSurface()),
+          new CameraCaptureSession.StateCallback() {
+
+            @Override
+            public void onConfigured(final CameraCaptureSession cameraCaptureSession) {
+              // The camera is already closed
+              if (null == cameraDevice) {
+                return;
+              }
+
+              // When the session is ready, we start displaying the preview.
+              captureSession = cameraCaptureSession;
+              try {
+                // Auto focus should be continuous for camera preview.
+                previewRequestBuilder.set(
+                    CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                // Flash is automatically enabled when necessary.
+                previewRequestBuilder.set(
+                    CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+
+                // Finally, we start displaying the camera preview.
+                previewRequest = previewRequestBuilder.build();
+                captureSession.setRepeatingRequest(
+                    previewRequest, captureCallback, backgroundHandler);
+              } catch (final CameraAccessException e) {
+                LOGGER.e(e, "Exception!");
+              }
+            }
+
+            @Override
+            public void onConfigureFailed(final CameraCaptureSession cameraCaptureSession) {
+              showToast("Failed");
+            }
+          },
+          null);
+    } catch (final CameraAccessException e) {
+      LOGGER.e(e, "Exception!");
+    }
+  }
+
+  /**
+   * Configures the necessary {@link Matrix} transformation to `mTextureView`. This method should be
+   * called after the camera preview size is determined in setUpCameraOutputs and also the size of
+   * `mTextureView` is fixed.
+   *
+   * @param viewWidth The width of `mTextureView`
+   * @param viewHeight The height of `mTextureView`
+   */
+  private void configureTransform(final int viewWidth, final int viewHeight) {
+    final Activity activity = getActivity();
+    if (null == textureView || null == previewSize || null == activity) {
+      return;
+    }
+    final int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+    final Matrix matrix = new Matrix();
+    final RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
+    final RectF bufferRect = new RectF(0, 0, previewSize.getHeight(), previewSize.getWidth());
+    final float centerX = viewRect.centerX();
+    final float centerY = viewRect.centerY();
+    if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+      bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
+      matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+      final float scale =
+          Math.max(
+              (float) viewHeight / previewSize.getHeight(),
+              (float) viewWidth / previewSize.getWidth());
+      matrix.postScale(scale, scale, centerX, centerY);
+      matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+    } else if (Surface.ROTATION_180 == rotation) {
+      matrix.postRotate(180, centerX, centerY);
+    }
+    textureView.setTransform(matrix);
+  }
+
+  /**
+   * Callback for Activities to use to initialize their data once the selected preview size is
+   * known.
+   */
+  public interface ConnectionCallback {
+    void onPreviewSizeChosen(Size size, int cameraRotation);
+  }
+
+  /** Compares two {@code Size}s based on their areas. */
+  static class CompareSizesByArea implements Comparator<Size> {
+    @Override
+    public int compare(final Size lhs, final Size rhs) {
+      // We cast here to ensure the multiplications won't overflow
+      return Long.signum(
+          (long) lhs.getWidth() * lhs.getHeight() - (long) rhs.getWidth() * rhs.getHeight());
+    }
+  }
