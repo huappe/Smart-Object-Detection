@@ -298,3 +298,133 @@ public abstract class MainActivity extends AppCompatActivity
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
     }
+    @Override
+    public synchronized void onPause() {
+        LOGGER.d("onPause " + this);
+
+        handlerThread.quitSafely();
+        try {
+            handlerThread.join();
+            handlerThread = null;
+            handler = null;
+        } catch (final InterruptedException e) {
+            LOGGER.e(e, "Exception!");
+        }
+
+        super.onPause();
+    }
+
+    @Override
+    public synchronized void onStop() {
+        LOGGER.d("onStop " + this);
+        if (mTTS != null){
+            mTTS.stop();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public synchronized void onDestroy() {
+        LOGGER.d("onDestroy " + this);
+        if (mTTS != null){
+            mTTS.stop();
+            mTTS.shutdown();
+        }
+        super.onDestroy();
+    }
+    protected void setFragment() {
+        String cameraId = chooseCamera();
+
+        Fragment fragment;
+        if (useCamera2API) {
+            CameraConnectionFragment camera2Fragment =
+                    CameraConnectionFragment.newInstance(
+                            new CameraConnectionFragment.ConnectionCallback() {
+                                @Override
+                                public void onPreviewSizeChosen(final Size size, final int rotation) {
+                                    previewHeight = size.getHeight();
+                                    previewWidth = size.getWidth();
+                                    MainActivity.this.onPreviewSizeChosen(size, rotation);
+                                }
+                            },
+                            this,
+                            getLayoutId(),
+                            getDesiredPreviewFrameSize());
+
+            camera2Fragment.setCamera(cameraId);
+            fragment = camera2Fragment;
+        } else {
+            fragment =
+                    new LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
+        }
+
+        getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
+    }
+
+    @Override
+    public void onPreviewFrame(final byte[] bytes, final Camera camera) {
+        if (isProcessingFrame) {
+            LOGGER.w("Dropping frame!");
+            return;
+        }
+
+        try {
+            // Initialize the storage bitmaps once when the resolution is known.
+            if (rgbBytes == null) {
+                Camera.Size previewSize = camera.getParameters().getPreviewSize();
+                previewHeight = previewSize.height;
+                previewWidth = previewSize.width;
+                rgbBytes = new int[previewWidth * previewHeight];
+                onPreviewSizeChosen(new Size(previewSize.width, previewSize.height), 90);
+            }
+        } catch (final Exception e) {
+            LOGGER.e(e, "Exception!");
+            return;
+        }
+
+        isProcessingFrame = true;
+        yuvBytes[0] = bytes;
+        yRowStride = previewWidth;
+
+        imageConverter =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        ImageUtils.convertYUV420SPToARGB8888(bytes, previewWidth, previewHeight, rgbBytes);
+                    }
+                };
+
+        postInferenceCallback =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        camera.addCallbackBuffer(bytes);
+                        isProcessingFrame = false;
+                    }
+                };
+        processImage();
+    }
+
+
+
+    protected synchronized void runInBackground(final Runnable r) {
+        if (handler != null) {
+            handler.post(r);
+        }
+    }
+
+    protected int[] getRgbBytes() {
+        imageConverter.run();
+        return rgbBytes;
+    }
+
+    protected int getLuminanceStride() {
+        return yRowStride;
+    }
+    protected byte[] getLuminance() {
+        return yuvBytes[0];
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
