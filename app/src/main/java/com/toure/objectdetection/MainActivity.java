@@ -428,3 +428,52 @@ public abstract class MainActivity extends AppCompatActivity
     public boolean isDebug() {
         return debug;
     }
+
+    protected void readyForNextImage() {
+        if (postInferenceCallback != null) {
+            postInferenceCallback.run();
+        }
+    }
+    protected void showFrameInfo(String frameInfo) {
+        frameValueTextView.setText(frameInfo);
+    }
+
+    protected void showCropInfo(String cropInfo) {
+        cropValueTextView.setText(cropInfo);
+    }
+
+    protected void showInference(String inferenceTime) {
+        inferenceTimeTextView.setText(inferenceTime);
+    }
+
+    protected int getScreenOrientation() {
+        switch (getWindowManager().getDefaultDisplay().getRotation()) {
+            case Surface.ROTATION_270:
+                return 270;
+            case Surface.ROTATION_180:
+                return 180;
+            case Surface.ROTATION_90:
+                return 90;
+            default:
+                return 0;
+        }
+    }
+boolean isUseCamera2API(){return  useCamera2API;}
+    void speakDetectedObject(@NonNull String objectLabel){
+        if (mTTS != null && isTTSInitialised){
+            mTTS.speak(objectLabel,TextToSpeech.QUEUE_FLUSH,null, objectLabel);
+        }
+
+    }
+    protected abstract void processImage();
+
+    protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
+
+    protected abstract int getLayoutId();
+
+    protected abstract Size getDesiredPreviewFrameSize();
+
+    protected abstract void setNumThreads(int numThreads);
+
+    protected abstract void setUseNNAPI(boolean isChecked);
+}
