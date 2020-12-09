@@ -42,4 +42,8 @@ public class AutoFitTextureView extends TextureView {
    * calculated from the parameters. Note that the actual sizes of parameters don't matter, that is,
    * calling setAspectRatio(2, 3) and setAspectRatio(4, 6) make the same result.
    *
-   * @param width Relative horizon
+   * @param width Relative horizontal size
+   * @param height Relative vertical size
+   */
+  public void setAspectRatio(final int width, final int height) {
+    if (width < 0 || heig
