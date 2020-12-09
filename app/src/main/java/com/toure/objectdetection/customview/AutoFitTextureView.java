@@ -29,4 +29,8 @@ public class AutoFitTextureView extends TextureView {
     this(context, null);
   }
 
-  public AutoFitTextureView
+  public AutoFitTextureView(final Context context, final AttributeSet attrs) {
+    this(context, attrs, 0);
+  }
+
+  public AutoFitTextureView(final Context context, fin
