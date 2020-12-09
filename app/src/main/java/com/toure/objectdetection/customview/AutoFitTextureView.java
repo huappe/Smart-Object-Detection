@@ -33,4 +33,9 @@ public class AutoFitTextureView extends TextureView {
     this(context, attrs, 0);
   }
 
-  public AutoFitTextureView(final Context context, fin
+  public AutoFitTextureView(final Context context, final AttributeSet attrs, final int defStyle) {
+    super(context, attrs, defStyle);
+  }
+
+  /**
+   * Sets the aspect ratio for this view. The size of
