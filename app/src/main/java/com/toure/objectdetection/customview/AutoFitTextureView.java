@@ -38,4 +38,5 @@ public class AutoFitTextureView extends TextureView {
   }
 
   /**
-   * Sets the aspect ratio for this view. The size of
+   * Sets the aspect ratio for this view. The size of the view will be measured based on the ratio
+   * calculated from the parameters. Note that the actual sizes of parameters don't matter, 
