@@ -16,4 +16,8 @@
 
 package com.toure.objectdetection.customview;
 
-im
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.TextureView;
+
+/** A {@link TextureView} that
