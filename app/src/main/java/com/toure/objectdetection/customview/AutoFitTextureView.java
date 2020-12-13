@@ -50,4 +50,9 @@ public class AutoFitTextureView extends TextureView {
       throw new IllegalArgumentException("Size cannot be negative.");
     }
     ratioWidth = width;
-    ratioHeight = height
+    ratioHeight = height;
+    requestLayout();
+  }
+
+  @Override
+  protected void onMeasure(final int widthMeasureSpec, final int heightMeasur
