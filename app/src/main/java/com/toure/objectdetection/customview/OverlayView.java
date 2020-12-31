@@ -37,4 +37,10 @@ public class OverlayView extends View {
 
   @Override
   public synchronized void draw(final Canvas canvas) {
-    for (final DrawCa
+    for (final DrawCallback callback : callbacks) {
+      callback.drawCallback(canvas);
+    }
+  }
+
+  /** Interface defining the callback for client classes. */
+  
