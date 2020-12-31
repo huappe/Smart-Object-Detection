@@ -31,4 +31,10 @@ public class OverlayView extends View {
     super(context, attrs);
   }
 
-  public void addCallback(final DrawCallback 
+  public void addCallback(final DrawCallback callback) {
+    callbacks.add(callback);
+  }
+
+  @Override
+  public synchronized void draw(final Canvas canvas) {
+    for (final DrawCa
