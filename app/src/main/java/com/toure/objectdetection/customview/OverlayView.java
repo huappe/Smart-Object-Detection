@@ -16,4 +16,11 @@ limitations under the License.
 package com.toure.objectdetection.customview;
 
 import android.content.Context;
-import android.gra
+import android.graphics.Canvas;
+import android.util.AttributeSet;
+import android.view.View;
+
+import java.util.LinkedList;
+import java.util.List;
+
+/** A simple View providing a re
