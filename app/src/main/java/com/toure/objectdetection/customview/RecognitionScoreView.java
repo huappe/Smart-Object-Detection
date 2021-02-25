@@ -17,4 +17,9 @@ package com.toure.objectdetection.customview;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Pai
+import android.graphics.Paint;
+import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.View;
+
+import com.toure.objectdetection
