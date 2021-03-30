@@ -27,4 +27,8 @@ import com.toure.objectdetection.tflite.Classifier.Recognition;
 import java.util.List;
 
 public class RecognitionScoreView extends View implements ResultsView {
-  private static final floa
+  private static final float TEXT_SIZE_DIP = 14;
+  private final float textSizePx;
+  private final Paint fgPaint;
+  private final Paint bgPaint;
+  private List<Rec
