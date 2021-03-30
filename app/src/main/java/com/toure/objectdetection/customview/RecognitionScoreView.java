@@ -22,4 +22,9 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
-import com.toure.objectdetection
+import com.toure.objectdetection.tflite.Classifier.Recognition;
+
+import java.util.List;
+
+public class RecognitionScoreView extends View implements ResultsView {
+  private static final floa
