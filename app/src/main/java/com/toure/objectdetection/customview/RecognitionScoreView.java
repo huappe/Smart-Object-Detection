@@ -31,4 +31,10 @@ public class RecognitionScoreView extends View implements ResultsView {
   private final float textSizePx;
   private final Paint fgPaint;
   private final Paint bgPaint;
-  private List<Rec
+  private List<Recognition> results;
+
+  public RecognitionScoreView(final Context context, final AttributeSet set) {
+    super(context, set);
+
+    textSizePx =
+        Typ
