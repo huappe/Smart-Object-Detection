@@ -37,4 +37,7 @@ public class RecognitionScoreView extends View implements ResultsView {
     super(context, set);
 
     textSizePx =
-        Typ
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
+    fgPaint = new Paint();
+    fgPai
