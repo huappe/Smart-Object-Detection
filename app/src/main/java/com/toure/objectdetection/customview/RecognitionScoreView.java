@@ -60,4 +60,6 @@ public class RecognitionScoreView extends View implements ResultsView {
     canvas.drawPaint(bgPaint);
 
     if (results != null) {
-      f
+      for (final Recognition recog : results) {
+        canvas.drawText(recog.getTitle() + ": " + recog.getConfidence(), x, y, fgPaint);
+        y += (
