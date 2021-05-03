@@ -53,4 +53,11 @@ public class RecognitionScoreView extends View implements ResultsView {
   }
 
   @Override
-  public void onDraw(final Canvas canvas) 
+  public void onDraw(final Canvas canvas) {
+    final int x = 10;
+    int y = (int) (fgPaint.getTextSize() * 1.5f);
+
+    canvas.drawPaint(bgPaint);
+
+    if (results != null) {
+      f
