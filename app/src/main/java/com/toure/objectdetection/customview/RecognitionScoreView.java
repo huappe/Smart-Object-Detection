@@ -47,4 +47,10 @@ public class RecognitionScoreView extends View implements ResultsView {
   }
 
   @Override
-  public void setResults(final Li
+  public void setResults(final List<Recognition> results) {
+    this.results = results;
+    postInvalidate();
+  }
+
+  @Override
+  public void onDraw(final Canvas canvas) 
