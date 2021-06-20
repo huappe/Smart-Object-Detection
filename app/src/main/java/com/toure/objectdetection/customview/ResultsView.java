@@ -19,4 +19,6 @@ import com.toure.objectdetection.tflite.Classifier.Recognition;
 
 import java.util.List;
 
-pu
+public interface ResultsView {
+  public void setResults(final List<Recognition> results);
+}
