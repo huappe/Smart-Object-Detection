@@ -170,3 +170,154 @@ public class ImageUtils {
       } catch (UnsatisfiedLinkError e) {
         LOGGER.w(
             "Native YUV420 -> RGB implementation not found, falling back to Java implementation");
+        useNativeConversion = false;
+      }
+    }
+
+    int yp = 0;
+    for (int j = 0; j < height; j++) {
+      int pY = yRowStride * j;
+      int pUV = uvRowStride * (j >> 1);
+
+      for (int i = 0; i < width; i++) {
+        int uv_offset = pUV + (i >> 1) * uvPixelStride;
+
+        out[yp++] = YUV2RGB(0xff & yData[pY + i], 0xff & uData[uv_offset], 0xff & vData[uv_offset]);
+      }
+    }
+  }
+
+  /**
+   * Converts YUV420 semi-planar data to ARGB 8888 data using the supplied width and height. The
+   * input and output must already be allocated and non-null. For efficiency, no error checking is
+   * performed.
+   *
+   * @param input The array of YUV 4:2:0 input data.
+   * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
+   * @param width The width of the input image.
+   * @param height The height of the input image.
+   * @param halfSize If true, downsample to 50% in each dimension, otherwise not.
+   */
+  private static native void convertYUV420SPToARGB8888(
+      byte[] input, int[] output, int width, int height, boolean halfSize);
+
+  /**
+   * Converts YUV420 semi-planar data to ARGB 8888 data using the supplied width and height. The
+   * input and output must already be allocated and non-null. For efficiency, no error checking is
+   * performed.
+   *
+   * @param y
+   * @param u
+   * @param v
+   * @param uvPixelStride
+   * @param width The width of the input image.
+   * @param height The height of the input image.
+   * @param halfSize If true, downsample to 50% in each dimension, otherwise not.
+   * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
+   */
+  private static native void convertYUV420ToARGB8888(
+      byte[] y,
+      byte[] u,
+      byte[] v,
+      int[] output,
+      int width,
+      int height,
+      int yRowStride,
+      int uvRowStride,
+      int uvPixelStride,
+      boolean halfSize);
+
+  /**
+   * Converts YUV420 semi-planar data to RGB 565 data using the supplied width and height. The input
+   * and output must already be allocated and non-null. For efficiency, no error checking is
+   * performed.
+   *
+   * @param input The array of YUV 4:2:0 input data.
+   * @param output A pre-allocated array for the RGB 5:6:5 output data.
+   * @param width The width of the input image.
+   * @param height The height of the input image.
+   */
+  private static native void convertYUV420SPToRGB565(
+      byte[] input, byte[] output, int width, int height);
+
+  /**
+   * Converts 32-bit ARGB8888 image data to YUV420SP data. This is useful, for instance, in creating
+   * data to feed the classes that rely on raw camera preview frames.
+   *
+   * @param input An array of input pixels in ARGB8888 format.
+   * @param output A pre-allocated array for the YUV420SP output data.
+   * @param width The width of the input image.
+   * @param height The height of the input image.
+   */
+  private static native void convertARGB8888ToYUV420SP(
+      int[] input, byte[] output, int width, int height);
+
+  /**
+   * Converts 16-bit RGB565 image data to YUV420SP data. This is useful, for instance, in creating
+   * data to feed the classes that rely on raw camera preview frames.
+   *
+   * @param input An array of input pixels in RGB565 format.
+   * @param output A pre-allocated array for the YUV420SP output data.
+   * @param width The width of the input image.
+   * @param height The height of the input image.
+   */
+  private static native void convertRGB565ToYUV420SP(
+      byte[] input, byte[] output, int width, int height);
+
+  /**
+   * Returns a transformation matrix from one reference frame into another. Handles cropping (if
+   * maintaining aspect ratio is desired) and rotation.
+   *
+   * @param srcWidth Width of source frame.
+   * @param srcHeight Height of source frame.
+   * @param dstWidth Width of destination frame.
+   * @param dstHeight Height of destination frame.
+   * @param applyRotation Amount of rotation to apply from one frame to another. Must be a multiple
+   *     of 90.
+   * @param maintainAspectRatio If true, will ensure that scaling in x and y remains constant,
+   *     cropping the image if necessary.
+   * @return The transformation fulfilling the desired requirements.
+   */
+  public static Matrix getTransformationMatrix(
+      final int srcWidth,
+      final int srcHeight,
+      final int dstWidth,
+      final int dstHeight,
+      final int applyRotation,
+      final boolean maintainAspectRatio) {
+    final Matrix matrix = new Matrix();
+
+    if (applyRotation != 0) {
+      if (applyRotation % 90 != 0) {
+        LOGGER.w("Rotation of %d % 90 != 0", applyRotation);
+      }
+
+      // Translate so center of image is at origin.
+      matrix.postTranslate(-srcWidth / 2.0f, -srcHeight / 2.0f);
+
+      // Rotate around origin.
+      matrix.postRotate(applyRotation);
+    }
+
+    // Account for the already applied rotation, if any, and then determine how
+    // much scaling is needed for each axis.
+    final boolean transpose = (Math.abs(applyRotation) + 90) % 180 == 0;
+
+    final int inWidth = transpose ? srcHeight : srcWidth;
+    final int inHeight = transpose ? srcWidth : srcHeight;
+
+    // Apply scaling if necessary.
+    if (inWidth != dstWidth || inHeight != dstHeight) {
+      final float scaleFactorX = dstWidth / (float) inWidth;
+      final float scaleFactorY = dstHeight / (float) inHeight;
+
+      if (maintainAspectRatio) {
+        // Scale by minimum factor so that dst is filled completely while
+        // maintaining the aspect ratio. Some image may fall off the edge.
+        final float scaleFactor = Math.max(scaleFactorX, scaleFactorY);
+        matrix.postScale(scaleFactor, scaleFactor);
+      } else {
+        // Scale exactly to fill dst from src.
+        matrix.postScale(scaleFactorX, scaleFactorY);
+      }
+    }
