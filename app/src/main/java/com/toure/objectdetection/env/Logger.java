@@ -131,3 +131,58 @@ public final class Logger {
       Log.v(tag, toMessage(format, args));
     }
   }
+
+  public void v(final Throwable t, final String format, final Object... args) {
+    if (isLoggable(Log.VERBOSE)) {
+      Log.v(tag, toMessage(format, args), t);
+    }
+  }
+
+  public void d(final String format, final Object... args) {
+    if (isLoggable(Log.DEBUG)) {
+      Log.d(tag, toMessage(format, args));
+    }
+  }
+
+  public void d(final Throwable t, final String format, final Object... args) {
+    if (isLoggable(Log.DEBUG)) {
+      Log.d(tag, toMessage(format, args), t);
+    }
+  }
+
+  public void i(final String format, final Object... args) {
+    if (isLoggable(Log.INFO)) {
+      Log.i(tag, toMessage(format, args));
+    }
+  }
+
+  public void i(final Throwable t, final String format, final Object... args) {
+    if (isLoggable(Log.INFO)) {
+      Log.i(tag, toMessage(format, args), t);
+    }
+  }
+
+  public void w(final String format, final Object... args) {
+    if (isLoggable(Log.WARN)) {
+      Log.w(tag, toMessage(format, args));
+    }
+  }
+
+  public void w(final Throwable t, final String format, final Object... args) {
+    if (isLoggable(Log.WARN)) {
+      Log.w(tag, toMessage(format, args), t);
+    }
+  }
+
+  public void e(final String format, final Object... args) {
+    if (isLoggable(Log.ERROR)) {
+      Log.e(tag, toMessage(format, args));
+    }
+  }
+
+  public void e(final Throwable t, final String format, final Object... args) {
+    if (isLoggable(Log.ERROR)) {
+      Log.e(tag, toMessage(format, args), t);
+    }
+  }
+}
