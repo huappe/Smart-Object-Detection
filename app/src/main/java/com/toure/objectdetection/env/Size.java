@@ -18,4 +18,9 @@ package com.toure.objectdetection.env;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 
-import j
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+/** Size class independent of a Camera object. */
+public clas
