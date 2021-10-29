@@ -25,4 +25,11 @@ import java.util.List;
 /** Size class independent of a Camera object. */
 public class Size implements Comparable<Size>, Serializable {
 
-  // 1.4 went out with this UID so we'll need to maintain it to preserve pending queries wh
+  // 1.4 went out with this UID so we'll need to maintain it to preserve pending queries when
+  // upgrading.
+  public static final long serialVersionUID = 7689808733290872361L;
+
+  public final int width;
+  public final int height;
+
+  public Size(fina
