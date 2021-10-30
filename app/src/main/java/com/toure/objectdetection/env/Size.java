@@ -38,4 +38,11 @@ public class Size implements Comparable<Size>, Serializable {
   }
 
   public Size(final Bitmap bmp) {
-    this.wi
+    this.width = bmp.getWidth();
+    this.height = bmp.getHeight();
+  }
+
+  /**
+   * Rotate a size by the given number of degrees.
+   *
+   * @param size Size to rota
