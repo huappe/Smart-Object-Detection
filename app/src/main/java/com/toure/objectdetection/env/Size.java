@@ -32,4 +32,10 @@ public class Size implements Comparable<Size>, Serializable {
   public final int width;
   public final int height;
 
-  public Size(fina
+  public Size(final int width, final int height) {
+    this.width = width;
+    this.height = height;
+  }
+
+  public Size(final Bitmap bmp) {
+    this.wi
