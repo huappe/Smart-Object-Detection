@@ -49,4 +49,6 @@ public class Size implements Comparable<Size>, Serializable {
    * @param rotation Degrees {0, 90, 180, 270} to rotate the size.
    * @return Rotated size.
    */
-  public static Size getRo
+  public static Size getRotatedSize(final Size size, final int rotation) {
+    if (rotation % 180 != 0) {
+      // The phone is portrait, therefore the camera is sideway
