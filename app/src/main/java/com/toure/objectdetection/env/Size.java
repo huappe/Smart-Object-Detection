@@ -51,4 +51,10 @@ public class Size implements Comparable<Size>, Serializable {
    */
   public static Size getRotatedSize(final Size size, final int rotation) {
     if (rotation % 180 != 0) {
-      // The phone is portrait, therefore the camera is sideway
+      // The phone is portrait, therefore the camera is sideways and frame should be rotated.
+      return new Size(size.height, size.width);
+    }
+    return size;
+  }
+
+  public static Size parseFro
