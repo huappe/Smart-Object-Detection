@@ -57,4 +57,11 @@ public class Size implements Comparable<Size>, Serializable {
     return size;
   }
 
-  public static Size parseFro
+  public static Size parseFromString(String sizeString) {
+    if (TextUtils.isEmpty(sizeString)) {
+      return null;
+    }
+
+    sizeString = sizeString.trim();
+
+    // The expected format is "<width>x<h
