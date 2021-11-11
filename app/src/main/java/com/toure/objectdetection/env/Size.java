@@ -68,4 +68,7 @@ public class Size implements Comparable<Size>, Serializable {
     final String[] components = sizeString.split("x");
     if (components.length == 2) {
       try {
-        final int wi
+        final int width = Integer.parseInt(components[0]);
+        final int height = Integer.parseInt(components[1]);
+        return new Size(width, height);
+      } catc
