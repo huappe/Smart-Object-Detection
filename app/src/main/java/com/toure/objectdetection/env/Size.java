@@ -71,4 +71,12 @@ public class Size implements Comparable<Size>, Serializable {
         final int width = Integer.parseInt(components[0]);
         final int height = Integer.parseInt(components[1]);
         return new Size(width, height);
-      } catc
+      } catch (final NumberFormatException e) {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  public static List<Si
