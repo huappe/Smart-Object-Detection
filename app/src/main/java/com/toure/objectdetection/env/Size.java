@@ -79,4 +79,7 @@ public class Size implements Comparable<Size>, Serializable {
     }
   }
 
-  public static List<Si
+  public static List<Size> sizeStringToList(final String sizes) {
+    final List<Size> sizeList = new ArrayList<Size>();
+    if (sizes != null) {
+      final String[] pairs = sizes
