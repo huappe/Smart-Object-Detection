@@ -85,4 +85,12 @@ public class Size implements Comparable<Size>, Serializable {
       final String[] pairs = sizes.split(",");
       for (final String pair : pairs) {
         final Size size = Size.parseFromString(pair);
-        if (size != null)
+        if (size != null) {
+          sizeList.add(size);
+        }
+      }
+    }
+    return sizeList;
+  }
+
+  public static String sizeListToString(final List<Size> s
