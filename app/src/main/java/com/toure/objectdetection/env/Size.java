@@ -93,4 +93,8 @@ public class Size implements Comparable<Size>, Serializable {
     return sizeList;
   }
 
-  public static String sizeListToString(final List<Size> s
+  public static String sizeListToString(final List<Size> sizes) {
+    String sizesString = "";
+    if (sizes != null && sizes.size() > 0) {
+      sizesString = sizes.get(0).toString();
+      for (i
