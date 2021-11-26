@@ -97,4 +97,11 @@ public class Size implements Comparable<Size>, Serializable {
     String sizesString = "";
     if (sizes != null && sizes.size() > 0) {
       sizesString = sizes.get(0).toString();
-      for (i
+      for (int i = 1; i < sizes.size(); i++) {
+        sizesString += "," + sizes.get(i).toString();
+      }
+    }
+    return sizesString;
+  }
+
+  p
