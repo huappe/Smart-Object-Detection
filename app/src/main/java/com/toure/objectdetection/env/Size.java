@@ -104,4 +104,8 @@ public class Size implements Comparable<Size>, Serializable {
     return sizesString;
   }
 
-  p
+  public static final String dimensionsAsString(final int width, final int height) {
+    return width + "x" + height;
+  }
+
+  public 
