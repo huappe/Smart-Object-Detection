@@ -108,4 +108,9 @@ public class Size implements Comparable<Size>, Serializable {
     return width + "x" + height;
   }
 
-  public 
+  public final float aspectRatio() {
+    return (float) width / (float) height;
+  }
+
+  @Override
+  public int compareTo(final Size other)
