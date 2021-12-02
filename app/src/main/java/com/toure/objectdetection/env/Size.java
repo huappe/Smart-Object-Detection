@@ -113,4 +113,10 @@ public class Size implements Comparable<Size>, Serializable {
   }
 
   @Override
-  public int compareTo(final Size other)
+  public int compareTo(final Size other) {
+    return width * height - other.width * other.height;
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (other
