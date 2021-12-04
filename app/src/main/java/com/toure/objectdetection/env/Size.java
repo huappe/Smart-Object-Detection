@@ -119,4 +119,12 @@ public class Size implements Comparable<Size>, Serializable {
 
   @Override
   public boolean equals(final Object other) {
-    if (other
+    if (other == null) {
+      return false;
+    }
+
+    if (!(other instanceof Size)) {
+      return false;
+    }
+
+    final Size otherSize = (
