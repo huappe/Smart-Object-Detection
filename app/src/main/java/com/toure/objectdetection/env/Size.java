@@ -134,4 +134,10 @@ public class Size implements Comparable<Size>, Serializable {
   @Override
   public int hashCode() {
     return width * 32713 + height;
-  
+  }
+
+  @Override
+  public String toString() {
+    return dimensionsAsString(width, height);
+  }
+}
