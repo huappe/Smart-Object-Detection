@@ -127,4 +127,11 @@ public class Size implements Comparable<Size>, Serializable {
       return false;
     }
 
-    final Size otherSize = (
+    final Size otherSize = (Size) other;
+    return (width == otherSize.width && height == otherSize.height);
+  }
+
+  @Override
+  public int hashCode() {
+    return width * 32713 + height;
+  
