@@ -41,4 +41,7 @@ import java.util.Map;
 import java.util.Vector;
 
 /**
- * Wrapper for frozen detection models trained using the Tensorf
+ * Wrapper for frozen detection models trained using the Tensorflow Object Detection API:
+ * github.com/tensorflow/models/tree/master/research/object_detection
+ */
+public class TFLiteObjectDetect
