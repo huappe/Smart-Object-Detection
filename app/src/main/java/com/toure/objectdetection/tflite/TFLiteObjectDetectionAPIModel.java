@@ -44,4 +44,7 @@ import java.util.Vector;
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API:
  * github.com/tensorflow/models/tree/master/research/object_detection
  */
-public class TFLiteObjectDetect
+public class TFLiteObjectDetectionAPIModel implements Classifier {
+  private static final Logger LOGGER = new Logger();
+
+  // Only return
