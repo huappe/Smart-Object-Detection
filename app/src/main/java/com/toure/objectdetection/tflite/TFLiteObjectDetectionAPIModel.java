@@ -47,4 +47,8 @@ import java.util.Vector;
 public class TFLiteObjectDetectionAPIModel implements Classifier {
   private static final Logger LOGGER = new Logger();
 
-  // Only return
+  // Only return this many results.
+  private static final int NUM_DETECTIONS = 10;
+  // Float model
+  private static final float IMAGE_MEAN = 128.0f;
+  private static fin
