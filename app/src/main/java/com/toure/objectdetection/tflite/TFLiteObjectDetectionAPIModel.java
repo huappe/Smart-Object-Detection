@@ -51,4 +51,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   private static final int NUM_DETECTIONS = 10;
   // Float model
   private static final float IMAGE_MEAN = 128.0f;
-  private static fin
+  private static final float IMAGE_STD = 128.0f;
+  // Number of threads in the java app
+  private static final int NUM_THREADS = 4;
+  private boolean isModelQuantized
