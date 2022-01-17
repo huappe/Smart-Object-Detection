@@ -59,4 +59,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   private int inputSize;
   // Pre-allocated buffers.
   private Vector<String> labels = new Vector<String>();
-  private in
+  private int[] intValues;
+  // outputLocations: array of shape [Batchsize, NUM_DETECTIONS,4]
+  // contains the location of detected b
