@@ -61,4 +61,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   private Vector<String> labels = new Vector<String>();
   private int[] intValues;
   // outputLocations: array of shape [Batchsize, NUM_DETECTIONS,4]
-  // contains the location of detected b
+  // contains the location of detected boxes
+  private float[][][] outputLocations;
+  // outputClasses: array of shape [Batchsize, NUM_DETECTIONS]
+  // contains the cl
