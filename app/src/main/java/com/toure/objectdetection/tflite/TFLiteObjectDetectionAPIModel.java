@@ -79,4 +79,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
   private TFLiteObjectDetectionAPIModel() {}
 
-  /** Memory-map the mo
+  /** Memory-map the model file in Assets. */
+  private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
+      throws IOExcep
