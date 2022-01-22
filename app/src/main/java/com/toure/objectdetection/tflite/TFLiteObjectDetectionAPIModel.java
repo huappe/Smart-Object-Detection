@@ -67,4 +67,8 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   // contains the classes of detected boxes
   private float[][] outputClasses;
   // outputScores: array of shape [Batchsize, NUM_DETECTIONS]
-  // contains the scores o
+  // contains the scores of detected boxes
+  private float[][] outputScores;
+  // numDetections: array of shape [Batchsize]
+  // contains the number of detected boxes
+  private float[] num
