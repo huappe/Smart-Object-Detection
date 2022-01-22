@@ -81,4 +81,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
-      throws IOExcep
+      throws IOException {
+    AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
+    FileInputStream inputStream = new FileInputStream(fileDescriptor.getF
