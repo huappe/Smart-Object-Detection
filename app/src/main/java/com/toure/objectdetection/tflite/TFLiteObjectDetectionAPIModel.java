@@ -94,4 +94,5 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
    * Initializes a native TensorFlow session for classifying images.
    *
    * @param assetManager The asset manager to be used to load assets.
- 
+   * @param modelFilename The filepath of the model GraphDef protocol buffer.
+   * @param labelFilename The filepath of label fil
