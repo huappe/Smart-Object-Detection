@@ -108,4 +108,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
       throws IOException {
     final TFLiteObjectDetectionAPIModel d = new TFLiteObjectDetectionAPIModel();
 
-    InputS
+    InputStream labelsInput = null;
+    String actualFilename = labelFilename.split("file:///android_asset/")[1];
+    labelsInput = assetManager
