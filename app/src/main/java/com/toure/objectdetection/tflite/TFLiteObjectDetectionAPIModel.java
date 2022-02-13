@@ -99,4 +99,8 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
    * @param inputSize The size of image input
    * @param isQuantized Boolean representing model is quantized or not
    */
-  public s
+  public static Classifier create(
+      final AssetManager assetManager,
+      final String modelFilename,
+      final String labelFilename,
+      final int inpu
