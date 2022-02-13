@@ -103,4 +103,9 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
       final AssetManager assetManager,
       final String modelFilename,
       final String labelFilename,
-      final int inpu
+      final int inputSize,
+      final boolean isQuantized)
+      throws IOException {
+    final TFLiteObjectDetectionAPIModel d = new TFLiteObjectDetectionAPIModel();
+
+    InputS
