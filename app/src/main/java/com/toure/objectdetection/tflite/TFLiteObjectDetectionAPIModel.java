@@ -114,4 +114,10 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     BufferedReader br = null;
     br = new BufferedReader(new InputStreamReader(labelsInput));
     String line;
-    while
+    while ((line = br.readLine()) != null) {
+      LOGGER.w(line);
+      d.labels.add(line);
+    }
+    br.close();
+
+    d.inputSize 
