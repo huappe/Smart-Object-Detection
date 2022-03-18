@@ -120,4 +120,9 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     }
     br.close();
 
-    d.inputSize 
+    d.inputSize = inputSize;
+
+    try {
+      d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
+    } catch (Exception e) {
+ 
