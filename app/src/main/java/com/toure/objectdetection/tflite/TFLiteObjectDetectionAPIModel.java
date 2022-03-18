@@ -125,4 +125,9 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     try {
       d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
     } catch (Exception e) {
- 
+      throw new RuntimeException(e);
+    }
+
+    d.isModelQuantized = isQuantized;
+    // Pre-allocate buffers.
+    int numBytesPerC
