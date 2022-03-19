@@ -130,4 +130,8 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
     d.isModelQuantized = isQuantized;
     // Pre-allocate buffers.
-    int numBytesPerC
+    int numBytesPerChannel;
+    if (isQuantized) {
+      numBytesPerChannel = 1; // Quantized
+    } else {
+      numBytesPerChannel = 4; // Floating poin
