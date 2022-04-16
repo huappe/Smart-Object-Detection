@@ -137,4 +137,8 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
       numBytesPerChannel = 4; // Floating point
     }
     d.imgData = ByteBuffer.allocateDirect(1 * d.inputSize * d.inputSize * 3 * numBytesPerChannel);
-    d.imgData.order(ByteOrder.nat
+    d.imgData.order(ByteOrder.nativeOrder());
+    d.intValues = new int[d.inputSize * d.inputSize];
+
+    d.tfLite.setNumThreads(NUM_THREADS);
+    d.outputLocations = new float[1][N
