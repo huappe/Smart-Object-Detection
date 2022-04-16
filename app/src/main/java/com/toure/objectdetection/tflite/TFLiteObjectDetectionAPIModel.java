@@ -144,4 +144,10 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     d.outputLocations = new float[1][NUM_DETECTIONS][4];
     d.outputClasses = new float[1][NUM_DETECTIONS];
     d.outputScores = new float[1][NUM_DETECTIONS];
-    d.numDet
+    d.numDetections = new float[1];
+    return d;
+  }
+
+  @Override
+  public List<Recognition> recognizeImage(final Bitmap bitmap) {
+    // Log this method s
