@@ -141,4 +141,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     d.intValues = new int[d.inputSize * d.inputSize];
 
     d.tfLite.setNumThreads(NUM_THREADS);
-    d.outputLocations = new float[1][N
+    d.outputLocations = new float[1][NUM_DETECTIONS][4];
+    d.outputClasses = new float[1][NUM_DETECTIONS];
+    d.outputScores = new float[1][NUM_DETECTIONS];
+    d.numDet
