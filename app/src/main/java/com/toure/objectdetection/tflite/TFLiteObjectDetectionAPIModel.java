@@ -134,4 +134,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     if (isQuantized) {
       numBytesPerChannel = 1; // Quantized
     } else {
-      numBytesPerChannel = 4; // Floating poin
+      numBytesPerChannel = 4; // Floating point
+    }
+    d.imgData = ByteBuffer.allocateDirect(1 * d.inputSize * d.inputSize * 3 * numBytesPerChannel);
+    d.imgData.order(ByteOrder.nat
