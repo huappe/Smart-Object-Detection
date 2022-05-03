@@ -154,4 +154,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     Trace.beginSection("recognizeImage");
 
     Trace.beginSection("preprocessBitmap");
-    // Preprocess the im
+    // Preprocess the image data from 0-255 int to normalized float based
+    // on the provided parameters.
+    bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitma
