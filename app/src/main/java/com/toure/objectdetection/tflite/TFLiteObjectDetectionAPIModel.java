@@ -169,4 +169,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
           imgData.put((byte) (pixelValue & 0xFF));
         } else { // Float model
           imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-          imgDat
+          imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+          imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+       
