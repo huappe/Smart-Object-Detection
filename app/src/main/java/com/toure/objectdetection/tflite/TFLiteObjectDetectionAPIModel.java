@@ -171,4 +171,11 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
           imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
           imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
           imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-       
+        }
+      }
+    }
+    Trace.endSection(); // preprocessBitmap
+
+    // Copy the input data into TensorFlow.
+    Trace.beginSection("feed");
+    out
