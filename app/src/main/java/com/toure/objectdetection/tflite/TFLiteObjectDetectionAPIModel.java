@@ -164,4 +164,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
         int pixelValue = intValues[i * inputSize + j];
         if (isModelQuantized) {
           // Quantized model
-          imgData.put((byte) ((pixel
+          imgData.put((byte) ((pixelValue >> 16) & 0xFF));
+          imgData.put((byte) ((pixelValue >> 8) & 0xFF));
+          imgData.put((byte) (pixelValue & 0xFF));
+        
