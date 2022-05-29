@@ -178,4 +178,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
     // Copy the input data into TensorFlow.
     Trace.beginSection("feed");
-    out
+    outputLocations = new float[1][NUM_DETECTIONS][4];
+    outputClasses = new float[1][NUM_DETECTIONS];
+    outputScores = new float[1][NUM
