@@ -180,4 +180,9 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     Trace.beginSection("feed");
     outputLocations = new float[1][NUM_DETECTIONS][4];
     outputClasses = new float[1][NUM_DETECTIONS];
-    outputScores = new float[1][NUM
+    outputScores = new float[1][NUM_DETECTIONS];
+    numDetections = new float[1];
+
+    Object[] inputArray = {imgData};
+    Map<Integer, Object> outputMap = new HashMap<>();
+    outputM
