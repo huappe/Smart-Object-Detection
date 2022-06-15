@@ -189,3 +189,8 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     outputMap.put(1, outputClasses);
     outputMap.put(2, outputScores);
     outputMap.put(3, numDetections);
+    Trace.endSection();
+
+    // Run the inference call.
+    Trace.beginSection("run");
+    tfLite.runForMultipleInputsOutputs(inputArray, outp
