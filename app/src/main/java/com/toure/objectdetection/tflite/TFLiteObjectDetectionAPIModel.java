@@ -185,4 +185,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
     Object[] inputArray = {imgData};
     Map<Integer, Object> outputMap = new HashMap<>();
-    outputM
+    outputMap.put(0, outputLocations);
+    outputMap.put(1, outputClasses);
+    outputMap.put(2, outputScores);
+    outputMap.put(3, numDetections);
