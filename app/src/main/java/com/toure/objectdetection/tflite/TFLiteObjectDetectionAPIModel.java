@@ -198,4 +198,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
     // Show the best detections.
     // after scaling them back to the input size.
-    final Array
+    final ArrayList<Recognition> recognitions = new ArrayList<>(NUM_DETECTIONS);
+    for (int i = 0; i < NUM_DETECTIONS; ++i) {
+      final RectF detection =
+          new RectF
