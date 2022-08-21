@@ -201,4 +201,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     final ArrayList<Recognition> recognitions = new ArrayList<>(NUM_DETECTIONS);
     for (int i = 0; i < NUM_DETECTIONS; ++i) {
       final RectF detection =
-          new RectF
+          new RectF(
+              outputLocations[0][i][1] * inputSize,
+              outputLocations[0][i][0] * inputSize,
+              o
