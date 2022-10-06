@@ -204,4 +204,6 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
           new RectF(
               outputLocations[0][i][1] * inputSize,
               outputLocations[0][i][0] * inputSize,
-              o
+              outputLocations[0][i][3] * inputSize,
+              outputLocations[0][i][2] * inputSize);
+      // SSD Mobilenet V1 Model assumes class 0 is background c
