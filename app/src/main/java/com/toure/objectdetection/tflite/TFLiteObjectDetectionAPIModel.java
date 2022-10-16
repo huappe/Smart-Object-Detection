@@ -208,4 +208,9 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
               outputLocations[0][i][2] * inputSize);
       // SSD Mobilenet V1 Model assumes class 0 is background class
       // in label file and class labels start from 1 to number_of_classes+1,
-      // while outputClasses correspond to class index from 0 to 
+      // while outputClasses correspond to class index from 0 to number_of_classes
+      int labelOffset = 1;
+      recognitions.add(
+          new Recognition(
+              "" + i,
+                  labels.get(1),// lab
