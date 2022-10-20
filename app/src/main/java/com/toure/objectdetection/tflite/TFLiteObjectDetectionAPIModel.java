@@ -225,4 +225,12 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   public void enableStatLogging(final boolean logStats) {}
 
   @Override
-  public String getStatString() 
+  public String getStatString() {
+    return "";
+  }
+
+  @Override
+  public void close() {}
+
+  public void setNumThreads(int num_threads) {
+    if (tfLite != null) tfLite.setNumThreads(num_threads
