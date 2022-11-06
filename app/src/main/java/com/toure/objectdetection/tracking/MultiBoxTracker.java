@@ -129,3 +129,163 @@ public class MultiBoxTracker {
     if (objectTracker == null) {
       return;
     }
+
+    // Draw correlations.
+    for (final TrackedRecognition recognition : trackedObjects) {
+      final ObjectTracker.TrackedObject trackedObject = recognition.trackedObject;
+
+      final RectF trackedPos = trackedObject.getTrackedPositionInPreviewFrame();
+
+      if (getFrameToCanvasMatrix().mapRect(trackedPos)) {
+        final String labelString = String.format("%.2f", trackedObject.getCurrentCorrelation());
+        borderedText.drawText(canvas, trackedPos.right, trackedPos.bottom, labelString);
+      }
+    }
+
+    final Matrix matrix = getFrameToCanvasMatrix();
+    objectTracker.drawDebug(canvas, matrix);
+  }
+
+  public synchronized void trackResults(
+      final List<Recognition> results, final byte[] frame, final long timestamp) {
+    logger.i("Processing %d results from %d", results.size(), timestamp);
+    processResults(timestamp, results, frame);
+  }
+
+  public synchronized void draw(final Canvas canvas) {
+    final boolean rotated = sensorOrientation % 180 == 90;
+    final float multiplier =
+        Math.min(
+            canvas.getHeight() / (float) (rotated ? frameWidth : frameHeight),
+            canvas.getWidth() / (float) (rotated ? frameHeight : frameWidth));
+    frameToCanvasMatrix =
+        ImageUtils.getTransformationMatrix(
+            frameWidth,
+            frameHeight,
+            (int) (multiplier * (rotated ? frameHeight : frameWidth)),
+            (int) (multiplier * (rotated ? frameWidth : frameHeight)),
+            sensorOrientation,
+            false);
+    for (final TrackedRecognition recognition : trackedObjects) {
+      final RectF trackedPos =
+          (objectTracker != null)
+              ? recognition.trackedObject.getTrackedPositionInPreviewFrame()
+              : new RectF(recognition.location);
+
+      getFrameToCanvasMatrix().mapRect(trackedPos);
+      boxPaint.setColor(recognition.color);
+
+      float cornerSize = Math.min(trackedPos.width(), trackedPos.height()) / 8.0f;
+      cornerSize = 1.0f;
+      canvas.drawRoundRect(trackedPos, cornerSize, cornerSize, boxPaint);
+
+      final String labelString =
+          !TextUtils.isEmpty(recognition.title)
+              ? String.format("%s %.2f", recognition.title, (100 * recognition.detectionConfidence))
+              : String.format("%.2f", (100 * recognition.detectionConfidence));
+      //            borderedText.drawText(canvas, trackedPos.left + cornerSize, trackedPos.top,
+      // labelString);
+      borderedText.drawText(
+          canvas, trackedPos.left + cornerSize, trackedPos.top, labelString + "%", boxPaint);
+    }
+  }
+
+  public synchronized void onFrame(
+      final int w,
+      final int h,
+      final int rowStride,
+      final int sensorOrientation,
+      final byte[] frame,
+      final long timestamp) {
+    if (objectTracker == null && !initialized) {
+      ObjectTracker.clearInstance();
+
+      logger.i("Initializing ObjectTracker: %dx%d", w, h);
+      objectTracker = ObjectTracker.getInstance(w, h, rowStride, true);
+      frameWidth = w;
+      frameHeight = h;
+      this.sensorOrientation = sensorOrientation;
+      initialized = true;
+
+      if (objectTracker == null) {
+        String message =
+            "Object tracking support not found. "
+                + "See tensorflow/examples/android/README.md for details.";
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+        logger.e(message);
+      }
+    }
+
+    if (objectTracker == null) {
+      return;
+    }
+
+    objectTracker.nextFrame(frame, null, timestamp, null, true);
+
+    // Clean up any objects not worth tracking any more.
+    final LinkedList<TrackedRecognition> copyList =
+        new LinkedList<TrackedRecognition>(trackedObjects);
+    for (final TrackedRecognition recognition : copyList) {
+      final ObjectTracker.TrackedObject trackedObject = recognition.trackedObject;
+      final float correlation = trackedObject.getCurrentCorrelation();
+      if (correlation < MIN_CORRELATION) {
+        logger.v("Removing tracked object %s because NCC is %.2f", trackedObject, correlation);
+        trackedObject.stopTracking();
+        trackedObjects.remove(recognition);
+
+        availableColors.add(recognition.color);
+      }
+    }
+  }
+
+  private void processResults(
+      final long timestamp, final List<Recognition> results, final byte[] originalFrame) {
+    final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<Pair<Float, Recognition>>();
+
+    screenRects.clear();
+    final Matrix rgbFrameToScreen = new Matrix(getFrameToCanvasMatrix());
+
+    for (final Recognition result : results) {
+      if (result.getLocation() == null) {
+        continue;
+      }
+      final RectF detectionFrameRect = new RectF(result.getLocation());
+
+      final RectF detectionScreenRect = new RectF();
+      rgbFrameToScreen.mapRect(detectionScreenRect, detectionFrameRect);
+
+      logger.v(
+          "Result! Frame: " + result.getLocation() + " mapped to screen:" + detectionScreenRect);
+
+      screenRects.add(new Pair<Float, RectF>(result.getConfidence(), detectionScreenRect));
+
+      if (detectionFrameRect.width() < MIN_SIZE || detectionFrameRect.height() < MIN_SIZE) {
+        logger.w("Degenerate rectangle! " + detectionFrameRect);
+        continue;
+      }
+
+      rectsToTrack.add(new Pair<Float, Recognition>(result.getConfidence(), result));
+    }
+
+    if (rectsToTrack.isEmpty()) {
+      logger.v("Nothing to track, aborting.");
+      return;
+    }
+
+    if (objectTracker == null) {
+      trackedObjects.clear();
+      for (final Pair<Float, Recognition> potential : rectsToTrack) {
+        final TrackedRecognition trackedRecognition = new TrackedRecognition();
+        trackedRecognition.detectionConfidence = potential.first;
+        trackedRecognition.location = new RectF(potential.second.getLocation());
+        trackedRecognition.trackedObject = null;
+        trackedRecognition.title = potential.second.getTitle();
+        trackedRecognition.color = COLORS[trackedObjects.size()];
+        trackedObjects.add(trackedRecognition);
+
+        if (trackedObjects.size() >= COLORS.length) {
+          break;
+        }
+      }
+      return;
+    }
