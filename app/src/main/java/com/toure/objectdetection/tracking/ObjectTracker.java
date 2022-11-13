@@ -306,3 +306,160 @@ public class ObjectTracker {
   }
 
   private void updateDebugHistory() {
+    lastKeypoints = new FrameChange(getKeypointsNative(false));
+
+    if (lastTimestamp == 0) {
+      return;
+    }
+
+    final PointF delta =
+        getAccumulatedDelta(
+            lastTimestamp, frameWidth / DOWNSAMPLE_FACTOR, frameHeight / DOWNSAMPLE_FACTOR, 100);
+
+    synchronized (debugHistory) {
+      debugHistory.add(delta);
+
+      while (debugHistory.size() > MAX_DEBUG_HISTORY_SIZE) {
+        debugHistory.remove(0);
+      }
+    }
+  }
+
+  public synchronized void drawDebug(final Canvas canvas, final Matrix frameToCanvas) {
+    canvas.save();
+    canvas.setMatrix(frameToCanvas);
+
+    drawHistoryDebug(canvas);
+    drawKeypointsDebug(canvas);
+
+    canvas.restore();
+  }
+
+  public Vector<String> getDebugText() {
+    final Vector<String> lines = new Vector<String>();
+
+    if (lastKeypoints != null) {
+      lines.add("Num keypoints " + lastKeypoints.pointDeltas.size());
+      lines.add("Min score: " + lastKeypoints.minScore);
+      lines.add("Max score: " + lastKeypoints.maxScore);
+    }
+
+    return lines;
+  }
+
+  public synchronized List<byte[]> pollAccumulatedFlowData(final long endFrameTime) {
+    final List<byte[]> frameDeltas = new ArrayList<byte[]>();
+    while (timestampedDeltas.size() > 0) {
+      final TimestampedDeltas currentDeltas = timestampedDeltas.peek();
+      if (currentDeltas.timestamp <= endFrameTime) {
+        frameDeltas.add(currentDeltas.deltas);
+        timestampedDeltas.removeFirst();
+      } else {
+        break;
+      }
+    }
+
+    return frameDeltas;
+  }
+
+  private RectF downscaleRect(final RectF fullFrameRect) {
+    return new RectF(
+        fullFrameRect.left / DOWNSAMPLE_FACTOR,
+        fullFrameRect.top / DOWNSAMPLE_FACTOR,
+        fullFrameRect.right / DOWNSAMPLE_FACTOR,
+        fullFrameRect.bottom / DOWNSAMPLE_FACTOR);
+  }
+
+  private RectF upscaleRect(final RectF downsampledFrameRect) {
+    return new RectF(
+        downsampledFrameRect.left * DOWNSAMPLE_FACTOR,
+        downsampledFrameRect.top * DOWNSAMPLE_FACTOR,
+        downsampledFrameRect.right * DOWNSAMPLE_FACTOR,
+        downsampledFrameRect.bottom * DOWNSAMPLE_FACTOR);
+  }
+
+  public synchronized TrackedObject trackObject(
+      final RectF position, final long timestamp, final byte[] frameData) {
+    if (downsampledTimestamp != timestamp) {
+      ObjectTracker.downsampleImageNative(
+          frameWidth, frameHeight, rowStride, frameData, DOWNSAMPLE_FACTOR, downsampledFrame);
+      downsampledTimestamp = timestamp;
+    }
+    return new TrackedObject(position, timestamp, downsampledFrame);
+  }
+
+  public synchronized TrackedObject trackObject(final RectF position, final byte[] frameData) {
+    return new TrackedObject(position, lastTimestamp, frameData);
+  }
+
+  private native void initNative(int imageWidth, int imageHeight, boolean alwaysTrack);
+
+  protected native void registerNewObjectWithAppearanceNative(
+      String objectId, float x1, float y1, float x2, float y2, byte[] data);
+
+  protected native void setPreviousPositionNative(
+      String objectId, float x1, float y1, float x2, float y2, long timestamp);
+
+  /** ********************* NATIVE CODE ************************************ */
+  protected native void setCurrentPositionNative(
+      String objectId, float x1, float y1, float x2, float y2);
+
+  protected native void forgetNative(String key);
+
+  protected native String getModelIdNative(String key);
+
+  protected native boolean haveObject(String key);
+
+  protected native boolean isObjectVisible(String key);
+
+  protected native float getCurrentCorrelation(String key);
+
+  protected native float getMatchScore(String key);
+
+  protected native void getTrackedPositionNative(String key, float[] points);
+
+  protected native void nextFrameNative(
+      byte[] frameData, byte[] uvData, long timestamp, float[] frameAlignMatrix);
+
+  protected native void releaseMemoryNative();
+
+  protected native void getCurrentPositionNative(
+      long timestamp,
+      final float positionX1,
+      final float positionY1,
+      final float positionX2,
+      final float positionY2,
+      final float[] delta);
+
+  protected native byte[] getKeypointsPacked(float scaleFactor);
+
+  protected native float[] getKeypointsNative(boolean onlyReturnCorrespondingKeypoints);
+
+  protected native void drawNative(int viewWidth, int viewHeight, float[] frameToCanvas);
+
+  private static class TimestampedDeltas {
+    final long timestamp;
+    final byte[] deltas;
+
+    public TimestampedDeltas(final long timestamp, final byte[] deltas) {
+      this.timestamp = timestamp;
+      this.deltas = deltas;
+    }
+  }
+
+  /**
+   * A simple class that records keypoint information, which includes local location, score and
+   * type. This will be used in calculating FrameChange.
+   */
+  public static class Keypoint {
+    public final float x;
+    public final float y;
+    public final float score;
+    public final int type;
+
+    public Keypoint(final float x, final float y) {
+      this.x = x;
+      this.y = y;
+      this.score = 0;
+      this.type = -1;
+    }
