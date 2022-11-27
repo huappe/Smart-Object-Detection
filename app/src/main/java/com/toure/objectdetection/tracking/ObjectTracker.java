@@ -463,3 +463,151 @@ public class ObjectTracker {
       this.score = 0;
       this.type = -1;
     }
+
+    public Keypoint(final float x, final float y, final float score, final int type) {
+      this.x = x;
+      this.y = y;
+      this.score = score;
+      this.type = type;
+    }
+
+    Keypoint delta(final Keypoint other) {
+      return new Keypoint(this.x - other.x, this.y - other.y);
+    }
+  }
+
+  /**
+   * A simple class that could calculate Keypoint delta. This class will be used in calculating
+   * frame translation delta for optical flow.
+   */
+  public static class PointChange {
+    public final Keypoint keypointA;
+    public final Keypoint keypointB;
+    private final boolean wasFound;
+    Keypoint pointDelta;
+
+    public PointChange(
+        final float x1,
+        final float y1,
+        final float x2,
+        final float y2,
+        final float score,
+        final int type,
+        final boolean wasFound) {
+      this.wasFound = wasFound;
+
+      keypointA = new Keypoint(x1, y1, score, type);
+      keypointB = new Keypoint(x2, y2);
+    }
+
+    public Keypoint getDelta() {
+      if (pointDelta == null) {
+        pointDelta = keypointB.delta(keypointA);
+      }
+      return pointDelta;
+    }
+  }
+
+  /** A class that records a timestamped frame translation delta for optical flow. */
+  public static class FrameChange {
+    public static final int KEYPOINT_STEP = 7;
+
+    public final Vector<PointChange> pointDeltas;
+
+    private final float minScore;
+    private final float maxScore;
+
+    public FrameChange(final float[] framePoints) {
+      float minScore = 100.0f;
+      float maxScore = -100.0f;
+
+      pointDeltas = new Vector<PointChange>(framePoints.length / KEYPOINT_STEP);
+
+      for (int i = 0; i < framePoints.length; i += KEYPOINT_STEP) {
+        final float x1 = framePoints[i + 0] * DOWNSAMPLE_FACTOR;
+        final float y1 = framePoints[i + 1] * DOWNSAMPLE_FACTOR;
+
+        final boolean wasFound = framePoints[i + 2] > 0.0f;
+
+        final float x2 = framePoints[i + 3] * DOWNSAMPLE_FACTOR;
+        final float y2 = framePoints[i + 4] * DOWNSAMPLE_FACTOR;
+        final float score = framePoints[i + 5];
+        final int type = (int) framePoints[i + 6];
+
+        minScore = Math.min(minScore, score);
+        maxScore = Math.max(maxScore, score);
+
+        pointDeltas.add(new PointChange(x1, y1, x2, y2, score, type, wasFound));
+      }
+
+      this.minScore = minScore;
+      this.maxScore = maxScore;
+    }
+  }
+
+  /**
+   * A TrackedObject represents a native TrackedObject, and provides access to the relevant native
+   * tracking information available after every frame update. They may be safely passed around and
+   * accessed externally, but will become invalid after stopTracking() is called or the related
+   * creating ObjectTracker is deactivated.
+   *
+   * @author andrewharp@google.com (Andrew Harp)
+   */
+  public class TrackedObject {
+    private final String id;
+
+    private long lastExternalPositionTime;
+
+    private RectF lastTrackedPosition;
+    private boolean visibleInLastFrame;
+
+    private boolean isDead;
+
+    TrackedObject(final RectF position, final long timestamp, final byte[] data) {
+      isDead = false;
+
+      id = Integer.toString(this.hashCode());
+
+      lastExternalPositionTime = timestamp;
+
+      synchronized (ObjectTracker.this) {
+        registerInitialAppearance(position, data);
+        setPreviousPosition(position, timestamp);
+        trackedObjects.put(id, this);
+      }
+    }
+
+    public void stopTracking() {
+      checkValidObject();
+
+      synchronized (ObjectTracker.this) {
+        isDead = true;
+        forgetNative(id);
+        trackedObjects.remove(id);
+      }
+    }
+
+    public float getCurrentCorrelation() {
+      checkValidObject();
+      return ObjectTracker.this.getCurrentCorrelation(id);
+    }
+
+    void registerInitialAppearance(final RectF position, final byte[] data) {
+      final RectF externalPosition = downscaleRect(position);
+      registerNewObjectWithAppearanceNative(
+          id,
+          externalPosition.left,
+          externalPosition.top,
+          externalPosition.right,
+          externalPosition.bottom,
+          data);
+    }
+
+    synchronized void setPreviousPosition(final RectF position, final long timestamp) {
+      checkValidObject();
+      synchronized (ObjectTracker.this) {
+        if (lastExternalPositionTime > timestamp) {
+          LOGGER.w("Tried to use older position time!");
+          return;
+        }
+        final RectF externalPosition = downscaleRect(position);
