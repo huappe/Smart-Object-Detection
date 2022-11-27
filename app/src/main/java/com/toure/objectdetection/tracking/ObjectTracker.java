@@ -611,3 +611,66 @@ public class ObjectTracker {
           return;
         }
         final RectF externalPosition = downscaleRect(position);
+        lastExternalPositionTime = timestamp;
+
+        setPreviousPositionNative(
+            id,
+            externalPosition.left,
+            externalPosition.top,
+            externalPosition.right,
+            externalPosition.bottom,
+            lastExternalPositionTime);
+
+        updateTrackedPosition();
+      }
+    }
+
+    void setCurrentPosition(final RectF position) {
+      checkValidObject();
+      final RectF downsampledPosition = downscaleRect(position);
+      synchronized (ObjectTracker.this) {
+        setCurrentPositionNative(
+            id,
+            downsampledPosition.left,
+            downsampledPosition.top,
+            downsampledPosition.right,
+            downsampledPosition.bottom);
+      }
+    }
+
+    private synchronized void updateTrackedPosition() {
+      checkValidObject();
+
+      final float[] delta = new float[4];
+      getTrackedPositionNative(id, delta);
+      lastTrackedPosition = new RectF(delta[0], delta[1], delta[2], delta[3]);
+
+      visibleInLastFrame = isObjectVisible(id);
+    }
+
+    public synchronized RectF getTrackedPositionInPreviewFrame() {
+      checkValidObject();
+
+      if (lastTrackedPosition == null) {
+        return null;
+      }
+      return upscaleRect(lastTrackedPosition);
+    }
+
+    synchronized long getLastExternalPositionTime() {
+      return lastExternalPositionTime;
+    }
+
+    public synchronized boolean visibleInLastPreviewFrame() {
+      return visibleInLastFrame;
+    }
+
+    private void checkValidObject() {
+      if (isDead) {
+        throw new RuntimeException("TrackedObject already removed from tracking!");
+      } else if (ObjectTracker.this != instance) {
+        throw new RuntimeException("TrackedObject created with another ObjectTracker!");
+      }
+    }
+  }
+}
