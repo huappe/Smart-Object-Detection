@@ -52,4 +52,8 @@
         android:pathData="M89,0L89,108"
         android:strokeWidth="0.8"
         android:strokeColor="#33FFFFFF" />
-    <pa
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M99,0L99,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="
