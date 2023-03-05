@@ -3,4 +3,7 @@
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
-    
+    android:viewportHeight="108">
+    <path
+        android:fillType="evenOdd"
+        android:pathData="M32,64C32,64 38.39,52.99 44.13,50
