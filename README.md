@@ -1,0 +1,1 @@
+# Smart-Object-Detection\nAn innovative Android application
