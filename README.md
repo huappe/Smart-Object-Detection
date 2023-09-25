@@ -1,1 +1,1 @@
-# Smart-Object-Detection\nAn innovative Android application showcasing the implementation of a trained TensorFlow Lite Object detector file.\n\nThe initial version of this appl
+# Smart-Object-Detection\nAn innovative Android application showcasing the implementation of a trained TensorFlow Lite Object detector file.\n\nThe initial version of this application was cloned from the [official TensorFlow android example](https://github.com/tensorflow/examples/tree/master/lite/examples/object_detection/androi
