@@ -1,1 +1,1 @@
-# Smart-Object-Detection\nAn innovative Android application
+# Smart-Object-Detection\nAn innovative Android application showcasing the implementation of a trained TensorFlow Lite Object detector file.\n\nThe initial version of this appl
